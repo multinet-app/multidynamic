@@ -243,7 +243,7 @@ export default defineComponent({
                 >
               </v-col>
               <v-col class="text-left">
-                MultiLink
+                MultiDyno
               </v-col>
               <v-col class="pa-0">
                 <about-dialog />
