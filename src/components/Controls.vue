@@ -1,5 +1,6 @@
 <script lang="ts">
 import Legend from '@/components/Legend.vue';
+import TimeSlicing from '@/components/TimeSlicing.vue';
 import AboutDialog from '@/components/AboutDialog.vue';
 import LoginMenu from '@/components/LoginMenu.vue';
 
@@ -12,6 +13,7 @@ import {
 export default defineComponent({
   components: {
     Legend,
+    TimeSlicing,
     AboutDialog,
     LoginMenu,
   },
@@ -482,7 +484,7 @@ export default defineComponent({
             />
           </v-list-item>
         </div>
-
+        <TimeSlicing />
         <v-subheader class="grey darken-3 py-0 white--text">
           Legend
 
