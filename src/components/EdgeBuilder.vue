@@ -2,12 +2,14 @@
 import store from '@/store';
 import { internalFieldNames, Edge } from '@/types';
 import DragTarget from '@/components/DragTarget.vue';
-import LegendChart from '@/components/LegendChart.vue';
 import { computed, defineComponent, ref } from '@vue/composition-api';
+import EdgeBuilderChart from '@/components/EdgeBuilderChart.vue';
+import LegendChart from '@/components/LegendChart.vue';
 
 export default defineComponent({
   components: {
     DragTarget,
+    EdgeBuilderChart,
     LegendChart,
   },
 
@@ -95,7 +97,7 @@ export default defineComponent({
             :type="'edge'"
           />
 
-          <legend-chart
+          <edge-builder-chart
             v-else
             :var-name="edgeVariables.width"
             :type="'edge'"
