@@ -73,6 +73,7 @@ export default defineComponent({
     const selectedRange = ref(timeMax.value > 0 ? [timeMin.value, timeMax.value] : [0, 100]);
 
     function sliceNetwork() {
+      let networkToReturn: { network: { edges: Edge[]; nodes: Node[]}; slice: number; time: number[] }[] = [];
       if (network.value !== null) {
         const slicedNetwork: { network: { edges: Edge[]; nodes: Node[]}; slice: number; time: number[] }[] = [];
         const timeInterval = (selectedRange.value[1] - selectedRange.value[0]) / timeSliceNumber.value;
@@ -96,7 +97,27 @@ export default defineComponent({
             slicedNetwork[i].network.edges.push(edge);
           }
         });
+        networkToReturn = slicedNetwork;
+
+        return networkToReturn;
       }
+      return networkToReturn;
+    }
+
+    function exportNetwork() {
+      if (network.value === null) {
+        return;
+      }
+
+      const networkToExport = sliceNetwork();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(
+        new Blob([JSON.stringify(networkToExport)], {
+          type: 'text/json',
+        }),
+      );
+      a.download = `${store.state.networkName}_${timeSliceNumber.value}-slices.json`;
+      a.click();
     }
 
     return {
@@ -108,6 +129,7 @@ export default defineComponent({
       timeSliceNumber,
       cleanedEdgeVariables,
       sliceNetwork,
+      exportNetwork,
       timeRange,
       timeMin,
       timeMax,
@@ -194,14 +216,28 @@ export default defineComponent({
         </v-list-item>
 
         <v-list-item>
-          <v-btn
-            color="primary"
-            block
-            depressed
-            @click="sliceNetwork"
-          >
-            Generate Slices
-          </v-btn>
+          <v-row>
+            <v-col>
+              <v-btn
+                color="primary"
+                block
+                depressed
+                @click="sliceNetwork"
+              >
+                Generate Slices
+              </v-btn>
+            </v-col>
+            <v-col>
+              <v-btn
+                color="primary"
+                block
+                depressed
+                @click="exportNetwork"
+              >
+                Export Network
+              </v-btn>
+            </v-col>
+          </v-row>
         </v-list-item>
       </v-card>
     </v-list>
