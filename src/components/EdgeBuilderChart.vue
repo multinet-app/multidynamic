@@ -2,7 +2,7 @@
 import store from '@/store';
 import { Node, Edge } from '@/types';
 import {
-  computed, defineComponent, onMounted, PropType, watchEffect,
+  computed, defineComponent, onMounted, PropType,
 } from '@vue/composition-api';
 import {
   histogram, max, min, mean, median, quantile,
@@ -47,16 +47,13 @@ export default defineComponent({
   setup(props) {
     const yAxisPadding = 30;
     const svgHeight = props.brushable === true ? 200 : 50;
-    const histogramHeight = 75;
+    const chartHeight = 75;
 
     const network = computed(() => store.state.network);
     const columnTypes = computed(() => store.state.columnTypes);
     const nestedVariables = computed(() => store.state.nestedVariables);
-    const nodeColorScale = computed(() => store.getters.nodeColorScale);
-    const nodeBarColorScale = computed(() => store.state.nodeBarColorScale);
     const nodeGlyphColorScale = computed(() => store.state.nodeGlyphColorScale);
     const edgeWidthScale = computed(() => store.getters.edgeWidthScale);
-    const edgeColorScale = computed(() => store.getters.edgeColorScale);
     const attributeRanges = computed(() => store.state.attributeRanges);
 
     // TODO: https://github.com/multinet-app/multilink/issues/176
@@ -83,43 +80,12 @@ export default defineComponent({
       }
     }
 
-    function unAssignVar(variable?: string) {
-      if (props.type === 'node') {
-        if (props.mappedTo === 'size') {
-          store.commit.setNodeSizeVariable('');
-        } else if (props.mappedTo === 'color') {
-          store.commit.setNodeColorVariable('');
-        } else if (props.mappedTo === 'bars') {
-          const newBarVars = nestedVariables.value.bar.filter(
-            (barVar) => barVar !== variable,
-          );
-
-          store.commit.setNestedVariables({
-            bar: newBarVars,
-            glyph: nestedVariables.value.glyph,
-          });
-        } else if (props.mappedTo === 'glyphs') {
-          const newGlyphVars = nestedVariables.value.glyph.filter(
-            (glyphVar) => glyphVar !== props.varName,
-          );
-
-          store.commit.setNestedVariables({
-            bar: nestedVariables.value.bar,
-            glyph: newGlyphVars,
-          });
-        }
-      } else if (props.type === 'edge') {
-        if (props.mappedTo === 'width') {
-          store.commit.setEdgeVariables({
-            width: '',
-            color: store.state.edgeVariables.color,
-          });
-        } else if (props.mappedTo === 'color') {
-          store.commit.setEdgeVariables({
-            width: store.state.edgeVariables.width,
-            color: '',
-          });
-        }
+    function unAssignVar() {
+      if (props.mappedTo === 'width') {
+        store.commit.setEdgeVariables({
+          width: '',
+          color: store.state.edgeVariables.color,
+        });
       }
     }
 
@@ -141,93 +107,42 @@ export default defineComponent({
       }
 
       // Process data for bars/histogram
-      if (props.mappedTo === 'width') { // edge width
-        yScale = scaleLinear()
-          .domain(edgeWidthScale.value.domain())
-          .range([svgHeight, 10]);
-
-        const minValue = edgeWidthScale.value.range()[0];
-        const maxValue = edgeWidthScale.value.range()[1];
-        const middleValue = (edgeWidthScale.value.range()[1] + edgeWidthScale.value.range()[0]) / 2;
-
-        // Draw width lines
-        variableSvg
-          .append('rect')
-          .attr('height', maxValue)
-          .attr('width', variableSvgWidth)
-          .attr('x', yAxisPadding)
-          .attr('y', 0)
-          .attr('fill', '#888888');
-
-        variableSvg
-          .append('rect')
-          .attr('height', middleValue)
-          .attr('width', variableSvgWidth)
-          .attr('x', yAxisPadding)
-          .attr('y', svgHeight / 2)
-          .attr('fill', '#888888');
-
-        variableSvg
-          .append('rect')
-          .attr('height', minValue + 2)
-          .attr('width', variableSvgWidth)
-          .attr('x', yAxisPadding)
-          .attr('y', svgHeight - 1)
-          .attr('fill', '#888888');
-      } else if (props.mappedTo === 'color') { // node color and edge color
+      if (props.mappedTo === 'width') {
         if (isQuantitative(props.varName, props.type)) {
-          // Gradient
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          let scale: any;
+          yScale = scaleLinear()
+            .domain(edgeWidthScale.value.domain())
+            .range([svgHeight, 10]);
 
-          if (props.type === 'node') {
-            xScale = scaleLinear()
-              .domain(nodeColorScale.value.domain() as number[])
-              .range([yAxisPadding, variableSvgWidth]);
+          const minValue = edgeWidthScale.value.range()[0];
+          const maxValue = edgeWidthScale.value.range()[1];
+          const middleValue = (edgeWidthScale.value.range()[1] + edgeWidthScale.value.range()[0]) / 2;
 
-            scale = nodeColorScale.value;
-          } else {
-            xScale = scaleLinear()
-              .domain(edgeColorScale.value.domain() as number[])
-              .range([yAxisPadding, variableSvgWidth]);
-
-            scale = edgeColorScale.value;
-          }
-
-          const minColor = scale(scale.domain()[0]);
-          const midColor = scale((scale.domain()[0] + scale.domain()[1]) / 2);
-          const maxColor = scale(scale.domain()[1]);
-
-          const gradient = variableSvg
-            .append('defs')
-            .append('linearGradient')
-            .attr('id', 'grad');
-
-          gradient
-            .append('stop')
-            .attr('offset', '0%')
-            .attr('stop-color', minColor);
-
-          gradient
-            .append('stop')
-            .attr('offset', '50%')
-            .attr('stop-color', midColor);
-
-          gradient
-            .append('stop')
-            .attr('offset', '100%')
-            .attr('stop-color', maxColor);
+          // Draw width lines
+          variableSvg
+            .append('rect')
+            .attr('height', maxValue)
+            .attr('width', variableSvgWidth)
+            .attr('x', yAxisPadding)
+            .attr('y', 0)
+            .attr('fill', '#888888');
 
           variableSvg
             .append('rect')
-            .attr('height', 20)
-            .attr('width', (xScale.range()[1] || 0) - (xScale.range()[0] || 0))
-            .attr('x', xScale.range()[0] || 0)
-            .attr('y', 20)
-            .attr('fill', 'url(#grad)')
-            .style('opacity', 0.7);
+            .attr('height', middleValue)
+            .attr('width', variableSvgWidth)
+            .attr('x', yAxisPadding)
+            .attr('y', svgHeight / 2)
+            .attr('fill', '#888888');
+
+          variableSvg
+            .append('rect')
+            .attr('height', minValue + 2)
+            .attr('width', variableSvgWidth)
+            .attr('x', yAxisPadding)
+            .attr('y', svgHeight - 1)
+            .attr('fill', '#888888');
         } else {
-          const currentData = props.type === 'node' ? network.value.nodes : network.value.edges;
+          const currentData = network.value.edges;
 
           // Swatches
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -252,58 +167,6 @@ export default defineComponent({
             .attr('fill', (d) => nodeGlyphColorScale.value(d))
             .classed('swatch', true);
         }
-      } else if (props.mappedTo === 'bars') { // nested bars
-        watchEffect(() => {
-          selectAll('.legend-bars').remove();
-
-          // Draw bars
-          nestedVariables.value.bar.forEach((barVar, index) => {
-            // Bar backgrounds
-            variableSvg
-              .append('rect')
-              .attr('fill', '#EEEEEE')
-              .attr('height', 50)
-              .attr('width', 20)
-              .attr('x', 50 * (index) + 25)
-              .attr('y', 10)
-              .classed('legend-bars', true);
-
-            // Main bar
-            const barHeight = 10 + (Math.random() * 40);
-            variableSvg
-              .append('rect')
-              .attr('fill', nodeBarColorScale.value(barVar))
-              .attr('height', barHeight)
-              .attr('width', 20)
-              .attr('x', 50 * (index) + 25)
-              .attr('y', 60 - barHeight)
-              .classed('legend-bars', true);
-
-            // Label
-            variableSvg
-              .append('foreignObject')
-              .attr('height', 20)
-              .attr('width', 30)
-              .attr('x', 50 * (index) + 15)
-              .attr('y', 60)
-              .classed('legend-bars', true)
-              .append('xhtml:p')
-              .attr('title', barVar)
-              .text(barVar);
-
-            // Axis
-            const barScale = scaleLinear()
-              .domain([attributeRanges.value[barVar].min, attributeRanges.value[barVar].max])
-              .range([59, 10]);
-
-            variableSvg
-              .append('g')
-              .classed('legend-bars', true)
-              .attr('transform', `translate(${50 * (index) + 23},0)`)
-              .call(axisLeft(barScale).ticks(4, 's'))
-              .call((g) => g.select('path').remove());
-          });
-        });
       } else if (isQuantitative(props.varName, props.type)) { // main numeric legend charts
         // WIP
         let currentData: number[] = [];
@@ -326,7 +189,8 @@ export default defineComponent({
         summaryStats.q3 = quantile(currentData, 0.75) as number;
         summaryStats.q1 = quantile(currentData, 0.25) as number;
 
-        // TODO Create density plot
+        // TODO: https://github.com/multinet-app/multidynamic/issues/3
+        // Create density plot
         const binGenerator = histogram()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .domain((xScale as any).domain()) // then the domain of the graphic
@@ -344,7 +208,7 @@ export default defineComponent({
 
         yScale = scaleLinear()
           .domain([0, max(bins, (d) => d.length) || 0])
-          .range([histogramHeight, 10]);
+          .range([chartHeight, 10]);
 
         variableSvg
           .selectAll('rect')
@@ -354,14 +218,14 @@ export default defineComponent({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .attr('x', (d) => xScale(d.x0 as any) || 0)
           .attr('y', (d) => yScale(d.length))
-          .attr('height', (d) => histogramHeight - yScale(d.length))
+          .attr('height', (d) => chartHeight - yScale(d.length))
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .attr('width', (d) => (xScale(d.x1 as any) || 0) - (xScale(d.x0 as any) || 0))
           .attr('fill', '#82B1FF');
 
         const boxPlotHeight = 100;
         const whiskersHeight = 20;
-        const boxPlotSVG = variableSvg.append('g').attr('transform', `translate(${0}, ${histogramHeight + 15})`).attr('id', 'boxPlot');
+        const boxPlotSVG = variableSvg.append('g').attr('transform', `translate(${0}, ${chartHeight + 15})`).attr('id', 'boxPlot');
 
         const whiskerLineGrps = boxPlotSVG
           .selectAll('.whiskers')
@@ -427,12 +291,10 @@ export default defineComponent({
           .text((d) => Math.floor(d))
           .attr('fill', '#acacac');
       } else { // main categorical legend charts
+        // change so that you click the edge types
         let currentData: string[] = [];
-        if (props.type === 'node') {
-          currentData = network.value.nodes.map((d: Node | Edge) => d[props.varName]).sort();
-        } else {
-          currentData = network.value.edges.map((d: Node | Edge) => d[props.varName]).sort();
-        }
+
+        currentData = network.value.edges.map((d: Edge) => d[props.varName]).sort();
 
         const bins = new Map([...new Set(currentData)].map(
           (x) => [x, currentData.filter((y) => y === x).length],
@@ -452,7 +314,7 @@ export default defineComponent({
         // Generate axis scales
         yScale = scaleLinear()
           .domain([min(binValues) || 0, max(binValues) || 0])
-          .range([svgHeight, 0]);
+          .range([chartHeight, 0]);
 
         xScale = scaleBand()
           .domain(binLabels)
@@ -466,7 +328,7 @@ export default defineComponent({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .attr('x', (d: string) => xScale(d as any) || 0)
           .attr('y', (d: string) => yScale(bins.get(d) || 0))
-          .attr('height', (d: string) => svgHeight - yScale(bins.get(d) || 0))
+          .attr('height', (d: string) => chartHeight - yScale(bins.get(d) || 0))
           .attr('width', xScale.bandwidth())
           .attr('fill', (d: string) => nodeGlyphColorScale.value(d));
       }
@@ -484,7 +346,7 @@ export default defineComponent({
         } else {
           variableSvg
             .append('g')
-            .attr('transform', `translate(0, ${histogramHeight})`)
+            .attr('transform', `translate(0, ${chartHeight})`)
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .call((axisBottom as any)(xScale).ticks(4, 's'))
             .call((g) => g.select('path').remove());
@@ -502,8 +364,77 @@ export default defineComponent({
 
       // For the brushable charts for filtering add brushing
       if (props.brushable) {
+        // brush labels
+        const labelGroup = variableSvg.append('g');
+
+        const labelL = labelGroup.append('text')
+          .attr('id', 'labelleft')
+          .attr('x', 0)
+          .attr('y', svgHeight + 5)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#acacac');
+        const labelR = labelGroup.append('text')
+          .attr('id', 'labelright')
+          .attr('x', 0)
+          .attr('y', svgHeight + 5)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#acacac');
+        const labelB = labelGroup.append('text')
+          .attr('id', 'labelbottom')
+          .attr('x', 0)
+          .attr('y', svgHeight + 5)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#acacac');
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-inner-declarations
+        function brushResizePath(d: any) {
+          const e = +(d.type === 'e');
+          const x = e ? 1 : -1;
+          const y = svgHeight / 2;
+          return `M${0.5 * x},${y}A6,6 0 0 ${e} ${6.5 * x},${y + 6}V${2 * y - 6
+          // eslint-disable-next-line no-useless-concat
+          }A6,6 0 0 ${e} ${0.5 * x},${2 * y}Z` + `M${2.5 * x},${y + 8}V${2 * y - 8
+          }M${4.5 * x},${y + 8}V${2 * y - 8}`;
+        }
+
+        // create brush
         const brush = brushX()
-          .extent([[yAxisPadding, 0], [variableSvgWidth, svgHeight]])
+          .extent([[yAxisPadding, 0], [variableSvgWidth, svgHeight - 10]])
+          .on('brush', (event: unknown) => {
+            const brushEvent = event as D3BrushEvent<unknown>;
+            const extent = brushEvent.selection as [number, number];
+
+            if (extent === null) {
+              return;
+            }
+
+            const currentAttributeRange = attributeRanges.value[props.varName];
+
+            if (isQuantitative(props.varName, props.type)) {
+              const newMin = (((extent[0] - yAxisPadding) / (variableSvgWidth - yAxisPadding)) * (currentAttributeRange.max - currentAttributeRange.min)) + currentAttributeRange.min;
+              const newMax = (((extent[1] - yAxisPadding) / (variableSvgWidth - yAxisPadding)) * (currentAttributeRange.max - currentAttributeRange.min)) + currentAttributeRange.min;
+
+              // update and move labels
+              labelL.attr('x', extent[0])
+                .text(newMin.toFixed(2));
+              labelR.attr('x', extent[1])
+                .text(newMax.toFixed(2));
+              // move brush handles
+              const handle = selectAll('.handle--custom');
+              handle.attr('display', null).attr('transform', (d, i) => `translate(${[extent[i], -svgHeight / 4]})`);
+            } else {
+              const firstIndex = Math.floor(((extent[0] - yAxisPadding) / (variableSvgWidth - yAxisPadding)) * attributeRanges.value[props.varName].binLabels.length);
+              const secondIndex = Math.ceil(((extent[1] - yAxisPadding) / (variableSvgWidth - yAxisPadding)) * attributeRanges.value[props.varName].binLabels.length);
+              const currentBinLabels = currentAttributeRange.binLabels.slice(firstIndex, secondIndex);
+
+              // update and move labels
+              labelB.attr('x', variableSvgWidth / 2)
+                .text(`Selection: ${currentBinLabels.length}`);
+              // move brush handles
+              const handle = selectAll('.handle--custom');
+              handle.attr('display', null).attr('transform', (d, i) => `translate(${[extent[i], -svgHeight / 4]})`);
+            }
+          })
           .on('end', (event: unknown) => {
             const brushEvent = event as D3BrushEvent<unknown>;
             const extent = brushEvent.selection as [number, number];
@@ -514,10 +445,7 @@ export default defineComponent({
 
             const currentAttributeRange = attributeRanges.value[props.varName];
 
-            if (
-              (props.filter === 'glyphs' && props.type === 'node')
-              || (props.filter === 'color' && !isQuantitative(props.varName, props.type))
-            ) {
+            if (!isQuantitative(props.varName, props.type)) {
               const firstIndex = Math.floor(((extent[0] - yAxisPadding) / (variableSvgWidth - yAxisPadding)) * attributeRanges.value[props.varName].binLabels.length);
               const secondIndex = Math.ceil(((extent[1] - yAxisPadding) / (variableSvgWidth - yAxisPadding)) * attributeRanges.value[props.varName].binLabels.length);
 
@@ -526,11 +454,7 @@ export default defineComponent({
                 currentBinLabels: currentAttributeRange.binLabels.slice(firstIndex, secondIndex),
                 currentBinValues: currentAttributeRange.binValues.slice(firstIndex, secondIndex),
               });
-            } else if (
-              (props.filter === 'size' && props.type === 'node')
-              || (props.filter === 'color' && isQuantitative(props.varName, props.type))
-              || (props.filter === 'width' && props.type === 'edge')
-            ) {
+            } else if (isQuantitative(props.varName, props.type)) {
               const newMin = (((extent[0] - yAxisPadding) / (variableSvgWidth - yAxisPadding)) * (currentAttributeRange.max - currentAttributeRange.min)) + currentAttributeRange.min;
               const newMax = (((extent[1] - yAxisPadding) / (variableSvgWidth - yAxisPadding)) * (currentAttributeRange.max - currentAttributeRange.min)) + currentAttributeRange.min;
 
@@ -539,10 +463,20 @@ export default defineComponent({
           });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (variableSvg as any)
-          .call(brush)
-          // start with the whole network brushed
-          .call(brush.move, [yAxisPadding, variableSvgWidth]);
+        const gBrush = (variableSvg as any)
+          .call(brush);
+
+        gBrush.selectAll('.handle--custom')
+          .data([{ type: 'w' }, { type: 'e' }])
+          .enter().append('path')
+          .attr('class', 'handle--custom')
+          .attr('stroke', '#000')
+          .attr('fill', '#eee')
+          .attr('cursor', 'ew-resize')
+          .attr('d', brushResizePath);
+
+        // start with the whole network brushed
+        gBrush.call(brush.move, [yAxisPadding, variableSvgWidth]);
       }
     });
 
