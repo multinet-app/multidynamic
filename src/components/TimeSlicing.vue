@@ -1,6 +1,8 @@
 <script lang="ts">
 import store from '@/store';
-import { internalFieldNames, Edge, Node } from '@/types';
+import {
+  internalFieldNames, Edge, SlicedNetworks,
+} from '@/types';
 import { computed, defineComponent, ref } from '@vue/composition-api';
 
 export default defineComponent({
@@ -73,15 +75,15 @@ export default defineComponent({
     const selectedRange = ref(timeMax.value > 0 ? [timeMin.value, timeMax.value] : [0, 100]);
 
     function sliceNetwork() {
-      let networkToReturn: { network: { edges: Edge[]; nodes: Node[]}; slice: number; time: number[] }[] = [];
+      let networkToReturn: SlicedNetworks[] = [];
       if (network.value !== null) {
-        const slicedNetwork: { network: { edges: Edge[]; nodes: Node[]}; slice: number; time: number[] }[] = [];
+        const slicedNetwork: SlicedNetworks[] = [];
         const timeInterval = (selectedRange.value[1] - selectedRange.value[0]) / timeSliceNumber.value;
 
         // Generate time chunks
         // eslint-disable-next-line no-plusplus
         for (let i = 0; i < timeSliceNumber.value; i++) {
-          const currentSlice: { network: { edges: Edge[]; nodes: Node[]}; slice: number; time: number[] } = { slice: i, time: [0, 0], network: { nodes: [], edges: [] } };
+          const currentSlice: SlicedNetworks = { slice: i, time: [0, 0], network: { nodes: [], edges: [] } };
           currentSlice.time = [i * timeInterval, (i + 1) * timeInterval];
           currentSlice.network.nodes = network.value.nodes;
           slicedNetwork.push(currentSlice);
@@ -99,8 +101,10 @@ export default defineComponent({
         });
         networkToReturn = slicedNetwork;
 
+        store.commit.setSlicedNetwork(networkToReturn);
         return networkToReturn;
       }
+      store.commit.setSlicedNetwork(networkToReturn);
       return networkToReturn;
     }
 

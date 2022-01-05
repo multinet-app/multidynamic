@@ -71,7 +71,14 @@ export interface AttributeRanges {
   [key: string]: AttributeRange;
 }
 
+export interface SlicedNetworks {
+  network: Network;
+  slice: number;
+  time: number[];
+}
+
 export interface State {
+  slicedNetwork: SlicedNetworks[];
   workspaceName: string | null;
   networkName: string | null;
   network: Network | null;
