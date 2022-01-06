@@ -8,6 +8,8 @@ import {
 } from '@vue/composition-api';
 
 export default defineComponent({
+  name: 'TimeSlicing',
+
   setup() {
     const showOptions = ref(false);
     // eslint-disable-next-line no-restricted-globals

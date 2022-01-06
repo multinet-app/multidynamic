@@ -6,6 +6,8 @@ import {
 } from '@vue/composition-api';
 
 export default defineComponent({
+  name: 'TimeLine',
+
   setup() {
     const slicedNetwork = computed(() => store.state.slicedNetwork);
     const svg: Ref<Element | null> = ref(null);
