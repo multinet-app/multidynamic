@@ -10,12 +10,8 @@ import {
 export default defineComponent({
   setup() {
     const showOptions = ref(false);
-    // TODO: https://github.com/multinet-app/multidynamic/issues/1
-    // Fix slice rules to check for type and show hints
-    const sliceRules = [
-      (value: number) => !!value || 'Required.',
-      (value: number) => (value && typeof value === 'number') || 'Please type a number',
-    ];
+    // eslint-disable-next-line no-restricted-globals
+    const sliceRules = (value: string) => !isNaN(parseFloat(value)) || 'Please type a number';
 
     const network = computed(() => store.state.network);
     const originalNetwork = computed(() => store.state.networkOnLoad);
@@ -226,7 +222,7 @@ export default defineComponent({
           <v-text-field
             v-model="timeSliceNumber"
             label="Time Slices"
-            :rules="sliceRules"
+            :rules="[sliceRules]"
             :hide-details="true"
             class="mt-3"
             clearable
