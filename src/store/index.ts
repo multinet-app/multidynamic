@@ -6,7 +6,7 @@ import {
 } from 'd3-force';
 
 import {
-  Edge, Node, Network, SimulationEdge, State, EdgeStyleVariables, LoadError, NestedVariables, ProvenanceEventTypes, Dimensions, AttributeRange,
+  Edge, Node, Network, SimulationEdge, State, EdgeStyleVariables, LoadError, NestedVariables, ProvenanceEventTypes, Dimensions, AttributeRange, SlicedNetworks,
 } from '@/types';
 import api from '@/api';
 import { ColumnTypes, NetworkSpec, UserSpec } from 'multinet';
@@ -81,6 +81,7 @@ const {
       x: null,
       y: null,
     },
+    slicedNetwork: [],
   } as State,
 
   getters: {
@@ -284,6 +285,10 @@ const {
 
     addAttributeRange(state, attributeRange: AttributeRange) {
       state.attributeRanges = { ...state.attributeRanges, [attributeRange.attr]: attributeRange };
+    },
+
+    setSlicedNetwork(state, slicedNetwork: SlicedNetworks[]) {
+      state.slicedNetwork = slicedNetwork;
     },
 
     setProvenance(state, provenance: Provenance<State, ProvenanceEventTypes, unknown>) {
