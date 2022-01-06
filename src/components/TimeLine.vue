@@ -2,7 +2,7 @@
 import { select, selectAll } from 'd3-selection';
 import store from '@/store';
 import {
-  computed, defineComponent, ref, Ref,
+  computed, defineComponent, ref, Ref, watch,
 } from '@vue/composition-api';
 
 export default defineComponent({
@@ -54,6 +54,11 @@ export default defineComponent({
 
       store.commit.setNetwork(slicedNetwork.value[selection].network);
     }
+
+    watch([slicedNetwork], () => {
+      selectAll('.timelineRectClass').classed('selected', false);
+      select('#timeSlice_0').classed('selected', true);
+    });
 
     return {
       svg,

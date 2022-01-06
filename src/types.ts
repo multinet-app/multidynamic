@@ -78,6 +78,7 @@ export interface SlicedNetworks {
 }
 
 export interface State {
+  networkOnLoad: Network | null;
   slicedNetwork: SlicedNetworks[];
   workspaceName: string | null;
   networkName: string | null;

@@ -18,6 +18,7 @@ export default defineComponent({
     ];
 
     const network = computed(() => store.state.network);
+    const originalNetwork = computed(() => store.state.networkOnLoad);
     const edgeVariables = computed(() => store.state.edgeVariables);
     const columnTypes = computed(() => store.state.columnTypes);
     const startTimeVar = ref('');
@@ -37,10 +38,10 @@ export default defineComponent({
     }
 
     const cleanedEdgeVariables = computed(() => {
-      if (network.value !== null) {
+      if (originalNetwork.value !== null) {
         // Loop through all edges, flatten the 2d array, and turn it into a set
         const allVars: Set<string> = new Set();
-        network.value.edges.map((edge: Edge) => Object.keys(edge).forEach((key) => allVars.add(key)));
+        originalNetwork.value.edges.map((edge: Edge) => Object.keys(edge).forEach((key) => allVars.add(key)));
 
         internalFieldNames.forEach((field) => allVars.delete(field));
         allVars.delete('source');
@@ -55,9 +56,9 @@ export default defineComponent({
     // Compute the min and max times
     const timeRange = computed(() => {
       const range: number[] = [0, 0];
-      if (startTimeVar.value !== null && endTimeVar.value !== null && network.value !== null) {
+      if (startTimeVar.value !== null && endTimeVar.value !== null && originalNetwork.value !== null) {
         // Loop through all edges, return min and max time values
-        network.value.edges.forEach((edge: Edge) => {
+        originalNetwork.value.edges.forEach((edge: Edge) => {
           if (edge[startTimeVar.value] < range[0]) {
             range[0] = edge[startTimeVar.value];
           }
@@ -80,36 +81,46 @@ export default defineComponent({
 
     function sliceNetwork() {
       let networkToReturn: SlicedNetworks[] = [];
-      if (network.value !== null) {
-        const slicedNetwork: SlicedNetworks[] = [];
-        const timeInterval = (selectedRange.value[1] - selectedRange.value[0]) / timeSliceNumber.value;
 
-        // Generate time chunks
-        // eslint-disable-next-line no-plusplus
-        for (let i = 0; i < timeSliceNumber.value; i++) {
-          const currentSlice: SlicedNetworks = { slice: i, time: [0, 0], network: { nodes: [], edges: [] } };
-          currentSlice.time = [i * timeInterval, (i + 1) * timeInterval];
-          currentSlice.network.nodes = network.value.nodes;
-          slicedNetwork.push(currentSlice);
+      // Resets to original network view
+      if (originalNetwork.value !== null) {
+        if (timeSliceNumber.value === 1) {
+          store.commit.setSlicedNetwork(networkToReturn);
+          store.commit.setNetwork(originalNetwork.value);
+          return networkToReturn;
         }
+        if (originalNetwork.value !== null) {
+          const slicedNetwork: SlicedNetworks[] = [];
+          const timeInterval = (selectedRange.value[1] - selectedRange.value[0]) / timeSliceNumber.value;
 
-        // Generate sliced network
-        let i = 0;
-        network.value.edges.forEach((edge: Edge) => {
-          if (edge[startTimeVar.value] >= slicedNetwork[i].time[0] && edge[startTimeVar.value] < slicedNetwork[i].time[1]) {
-            slicedNetwork[i].network.edges.push(edge);
-          } else if (i < timeSliceNumber.value) {
-            i += 1;
-            slicedNetwork[i].network.edges.push(edge);
+          // Generate time chunks
+          // eslint-disable-next-line no-plusplus
+          for (let i = 0; i < timeSliceNumber.value; i++) {
+            const currentSlice: SlicedNetworks = { slice: i, time: [0, 0], network: { nodes: [], edges: [] } };
+            currentSlice.time = [i * timeInterval, (i + 1) * timeInterval];
+            currentSlice.network.nodes = originalNetwork.value.nodes;
+            slicedNetwork.push(currentSlice);
           }
-        });
-        networkToReturn = slicedNetwork;
 
+          // Generate sliced network
+          let i = 0;
+          originalNetwork.value.edges.forEach((edge: Edge) => {
+            if (edge[startTimeVar.value] >= slicedNetwork[i].time[0] && edge[startTimeVar.value] < slicedNetwork[i].time[1]) {
+              slicedNetwork[i].network.edges.push(edge);
+            } else if (i < timeSliceNumber.value) {
+              i += 1;
+              slicedNetwork[i].network.edges.push(edge);
+            }
+          });
+          networkToReturn = slicedNetwork;
+
+          store.commit.setSlicedNetwork(networkToReturn);
+          store.commit.setNetwork(networkToReturn[0].network);
+          return networkToReturn;
+        }
         store.commit.setSlicedNetwork(networkToReturn);
-        store.commit.setNetwork(networkToReturn[0].network);
         return networkToReturn;
       }
-      store.commit.setSlicedNetwork(networkToReturn);
       return networkToReturn;
     }
 

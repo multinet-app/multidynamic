@@ -33,6 +33,7 @@ const {
     workspaceName: null,
     networkName: null,
     network: null,
+    networkOnLoad: null,
     columnTypes: null,
     selectedNodes: new Set(),
     loadError: {
@@ -136,6 +137,10 @@ const {
 
     setNetwork(state, network: Network) {
       state.network = network;
+    },
+
+    setNetworkOnLoad(state, network: Network) {
+      state.networkOnLoad = network;
     },
 
     setColumnTypes(state, columnTypes: ColumnTypes) {
@@ -502,6 +507,8 @@ const {
         edges: edges.results as Edge[],
       };
       commit.setNetwork(networkElements);
+      // Store origingal copy of network
+      commit.setNetworkOnLoad(networkElements);
 
       const networkTables = await api.networkTables(workspaceName, networkName);
       // Get the network metadata promises
