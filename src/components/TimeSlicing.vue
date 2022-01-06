@@ -3,7 +3,9 @@ import store from '@/store';
 import {
   internalFieldNames, Edge, SlicedNetworks,
 } from '@/types';
-import { computed, defineComponent, ref } from '@vue/composition-api';
+import {
+  computed, defineComponent, ref, watch,
+} from '@vue/composition-api';
 
 export default defineComponent({
   setup() {
@@ -70,9 +72,11 @@ export default defineComponent({
     const timeMin = computed(() => timeRange.value[0]);
     const timeMax = computed(() => timeRange.value[1]);
 
-    // TODO: https://github.com/multinet-app/multidynamic/issues/2
-    // Add watch effect for time max?
-    const selectedRange = ref(timeMax.value > 0 ? [timeMin.value, timeMax.value] : [0, 100]);
+    const selectedRange = ref([0, 0]);
+
+    watch([timeMax], () => {
+      if (timeMax.value > 0) { selectedRange.value = [timeMin.value, timeMax.value]; }
+    });
 
     function sliceNetwork() {
       let networkToReturn: SlicedNetworks[] = [];
