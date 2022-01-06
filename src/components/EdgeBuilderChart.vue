@@ -416,9 +416,9 @@ export default defineComponent({
 
               // update and move labels
               labelL.attr('x', extent[0])
-                .text(newMin.toFixed(2));
+                .text(newMin.toFixed(0));
               labelR.attr('x', extent[1])
-                .text(newMax.toFixed(2));
+                .text(newMax.toFixed(0));
               // move brush handles
               const handle = selectAll('.handle--custom');
               handle.attr('display', null).attr('transform', (d, i) => `translate(${[extent[i], -svgHeight / 4]})`);
