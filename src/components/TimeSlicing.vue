@@ -102,6 +102,7 @@ export default defineComponent({
         networkToReturn = slicedNetwork;
 
         store.commit.setSlicedNetwork(networkToReturn);
+        store.commit.setNetwork(networkToReturn[0].network);
         return networkToReturn;
       }
       store.commit.setSlicedNetwork(networkToReturn);

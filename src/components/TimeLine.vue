@@ -51,6 +51,8 @@ export default defineComponent({
       currentTime.value.current = selection;
       selectAll('.timelineRectClass').classed('selected', false);
       select(`#timeSlice_${selection}`).classed('selected', true);
+
+      store.commit.setNetwork(slicedNetwork.value[selection].network);
     }
 
     return {
