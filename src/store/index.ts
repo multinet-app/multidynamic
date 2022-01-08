@@ -53,6 +53,7 @@ const {
     edgeVariables: {
       width: '',
       color: '',
+      time: '',
     },
     nodeSizeVariable: '',
     nodeColorVariable: '',

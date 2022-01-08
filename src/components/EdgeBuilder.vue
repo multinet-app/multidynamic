@@ -92,17 +92,17 @@ export default defineComponent({
       >
         <div class="sticky">
           <drag-target
-            v-if="edgeVariables.width === ''"
-            :title="'width'"
+            v-if="edgeVariables.time === ''"
+            :title="'time'"
             :type="'edge'"
           />
 
           <edge-builder-chart
             v-else
-            :var-name="edgeVariables.width"
+            :var-name="edgeVariables.time"
             :type="'edge'"
             :selected="true"
-            :mapped-to="'width'"
+            :mapped-to="'time'"
           />
 
           <v-divider />

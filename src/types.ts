@@ -53,6 +53,7 @@ export interface NestedVariables {
 export interface EdgeStyleVariables {
   width: string;
   color: string;
+  time: string;
 }
 
 export interface AttributeRange {

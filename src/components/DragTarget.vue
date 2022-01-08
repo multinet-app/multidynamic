@@ -49,12 +49,25 @@ export default defineComponent({
         const updatedEdgeVars = {
           width: droppedVarName,
           color: edgeVariables.value.color,
+          time: edgeVariables.value.time,
         };
         store.commit.setEdgeVariables(updatedEdgeVars);
       } else if (props.type === 'edge' && props.title === 'color') {
         const updatedEdgeVars = {
           width: edgeVariables.value.width,
           color: droppedVarName,
+          time: edgeVariables.value.time,
+
+        };
+        store.commit.setEdgeVariables(updatedEdgeVars);
+      } else if (props.type === 'edge' && props.title === 'time') {
+        // TODO: https://github.com/multinet-app/multidynamic/issues/6
+        // Make more elegant edge filter
+        const updatedEdgeVars = {
+          width: droppedVarName,
+          color: edgeVariables.value.color,
+          time: droppedVarName,
+
         };
         store.commit.setEdgeVariables(updatedEdgeVars);
       }

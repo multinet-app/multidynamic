@@ -81,10 +81,11 @@ export default defineComponent({
     }
 
     function unAssignVar() {
-      if (props.mappedTo === 'width') {
+      if (props.mappedTo === 'time') {
         store.commit.setEdgeVariables({
-          width: '',
+          width: store.state.edgeVariables.width,
           color: store.state.edgeVariables.color,
+          time: '',
         });
       }
     }
@@ -107,7 +108,7 @@ export default defineComponent({
       }
 
       // Process data for bars/histogram
-      if (props.mappedTo === 'width') {
+      if (props.mappedTo === 'time') {
         if (isQuantitative(props.varName, props.type)) {
           yScale = scaleLinear()
             .domain(edgeWidthScale.value.domain())

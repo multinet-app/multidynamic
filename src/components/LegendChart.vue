@@ -111,11 +111,19 @@ export default defineComponent({
           store.commit.setEdgeVariables({
             width: '',
             color: store.state.edgeVariables.color,
+            time: store.state.edgeVariables.time,
           });
         } else if (props.mappedTo === 'color') {
           store.commit.setEdgeVariables({
             width: store.state.edgeVariables.width,
             color: '',
+            time: store.state.edgeVariables.time,
+          });
+        } else if (props.mappedTo === 'time') {
+          store.commit.setEdgeVariables({
+            width: store.state.edgeVariables.width,
+            color: store.state.edgeVariables.color,
+            time: '',
           });
         }
       }
