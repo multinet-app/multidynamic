@@ -78,48 +78,39 @@ export default defineComponent({
     });
 
     function sliceNetwork() {
-      let networkToReturn: SlicedNetwork[] = [];
-
-      // Resets to original network view
-      if (originalNetwork.value !== null) {
-        if (timeSliceNumber.value === 1) {
-          store.commit.setSlicedNetwork(networkToReturn);
-          store.commit.setNetwork(originalNetwork.value);
-          return networkToReturn;
-        }
-        if (originalNetwork.value !== null) {
-          const slicedNetwork: SlicedNetwork[] = [];
-          const timeInterval = (selectedRange.value[1] - selectedRange.value[0]) / timeSliceNumber.value;
-
-          // Generate time chunks
-          // eslint-disable-next-line no-plusplus
-          for (let i = 0; i < timeSliceNumber.value; i++) {
-            const currentSlice: SlicedNetwork = { slice: i, time: [0, 0], network: { nodes: [], edges: [] } };
-            currentSlice.time = [i * timeInterval, (i + 1) * timeInterval];
-            currentSlice.network.nodes = originalNetwork.value.nodes;
-            slicedNetwork.push(currentSlice);
-          }
-
-          // Generate sliced network
-          let i = 0;
-          originalNetwork.value.edges.forEach((edge: Edge) => {
-            if (edge[startTimeVar.value] >= slicedNetwork[i].time[0] && edge[startTimeVar.value] < slicedNetwork[i].time[1]) {
-              slicedNetwork[i].network.edges.push(edge);
-            } else if (i < timeSliceNumber.value) {
-              i += 1;
-              slicedNetwork[i].network.edges.push(edge);
-            }
-          });
-          networkToReturn = slicedNetwork;
-
-          store.commit.setSlicedNetwork(networkToReturn);
-          store.commit.setNetwork(networkToReturn[0].network);
-          return networkToReturn;
-        }
-        store.commit.setSlicedNetwork(networkToReturn);
-        return networkToReturn;
+      // Resets to original network view when time slice is 1
+      if (originalNetwork.value !== null && timeSliceNumber.value === 1) {
+        store.commit.setSlicedNetwork([]);
+        store.commit.setNetwork(originalNetwork.value);
       }
-      return networkToReturn;
+      // Generates sliced networks based on time slices
+      if (originalNetwork.value !== null && timeSliceNumber.value !== 1) {
+        const slicedNetwork: SlicedNetwork[] = [];
+        const timeInterval = (selectedRange.value[1] - selectedRange.value[0]) / timeSliceNumber.value;
+
+        // Generate time chunks
+        // eslint-disable-next-line no-plusplus
+        for (let i = 0; i < timeSliceNumber.value; i++) {
+          const currentSlice: SlicedNetwork = { slice: i, time: [0, 0], network: { nodes: [], edges: [] } };
+          currentSlice.time = [i * timeInterval, (i + 1) * timeInterval];
+          currentSlice.network.nodes = originalNetwork.value.nodes;
+          slicedNetwork.push(currentSlice);
+        }
+
+        // Generate sliced network
+        let i = 0;
+        originalNetwork.value.edges.forEach((edge: Edge) => {
+          if (edge[startTimeVar.value] >= slicedNetwork[i].time[0] && edge[startTimeVar.value] < slicedNetwork[i].time[1]) {
+            slicedNetwork[i].network.edges.push(edge);
+          } else if (i < timeSliceNumber.value) {
+            i += 1;
+            slicedNetwork[i].network.edges.push(edge);
+          }
+        });
+
+        store.commit.setSlicedNetwork(slicedNetwork);
+        store.commit.setNetwork(slicedNetwork[0].network);
+      }
     }
 
     function exportNetwork() {
