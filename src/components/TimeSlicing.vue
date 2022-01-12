@@ -12,8 +12,7 @@ export default defineComponent({
 
   setup() {
     const showOptions = ref(false);
-    // eslint-disable-next-line no-restricted-globals
-    const sliceRules = (value: string) => !isNaN(parseFloat(value)) || 'Please type a number';
+    const sliceRules = (value: string) => !Number.isNaN(parseFloat(value)) || 'Please type a number';
 
     const network = computed(() => store.state.network);
     const originalNetwork = computed(() => store.state.networkOnLoad);
