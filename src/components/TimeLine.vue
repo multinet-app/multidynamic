@@ -10,7 +10,6 @@ export default defineComponent({
 
   setup() {
     const slicedNetwork = computed(() => store.state.slicedNetwork);
-    const svg: Ref<Element | null> = ref(null);
 
     const currentTime = computed(() => {
       const times: { timeRanges: {[key: number]: number[]} ; current: number ; slices: number } = { timeRanges: {}, current: 0, slices: 0 };
@@ -63,7 +62,6 @@ export default defineComponent({
     });
 
     return {
-      svg,
       svgDimensions,
       currentTime,
       timeRangesLength,
@@ -84,7 +82,6 @@ export default defineComponent({
       Time Slices
     </h3>
     <svg
-      ref="svg"
       :width="svgDimensions.width"
       :height="50"
     >
