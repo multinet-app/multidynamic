@@ -1,7 +1,7 @@
 <script lang="ts">
 import store from '@/store';
 import {
-  internalFieldNames, Edge, SlicedNetworks,
+  internalFieldNames, Edge, SlicedNetwork,
 } from '@/types';
 import {
   computed, defineComponent, ref, watch,
@@ -78,7 +78,7 @@ export default defineComponent({
     });
 
     function sliceNetwork() {
-      let networkToReturn: SlicedNetworks[] = [];
+      let networkToReturn: SlicedNetwork[] = [];
 
       // Resets to original network view
       if (originalNetwork.value !== null) {
@@ -88,13 +88,13 @@ export default defineComponent({
           return networkToReturn;
         }
         if (originalNetwork.value !== null) {
-          const slicedNetwork: SlicedNetworks[] = [];
+          const slicedNetwork: SlicedNetwork[] = [];
           const timeInterval = (selectedRange.value[1] - selectedRange.value[0]) / timeSliceNumber.value;
 
           // Generate time chunks
           // eslint-disable-next-line no-plusplus
           for (let i = 0; i < timeSliceNumber.value; i++) {
-            const currentSlice: SlicedNetworks = { slice: i, time: [0, 0], network: { nodes: [], edges: [] } };
+            const currentSlice: SlicedNetwork = { slice: i, time: [0, 0], network: { nodes: [], edges: [] } };
             currentSlice.time = [i * timeInterval, (i + 1) * timeInterval];
             currentSlice.network.nodes = originalNetwork.value.nodes;
             slicedNetwork.push(currentSlice);
