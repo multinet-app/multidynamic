@@ -70,7 +70,7 @@ export default {
     <v-main>
       <controls />
       <time-line
-        v-if="network !== null && slicedNetwork === true"
+        v-if="network !== null && slicedNetwork"
       />
 
       <multi-link

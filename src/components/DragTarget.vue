@@ -57,7 +57,6 @@ export default defineComponent({
           width: edgeVariables.value.width,
           color: droppedVarName,
           time: edgeVariables.value.time,
-
         };
         store.commit.setEdgeVariables(updatedEdgeVars);
       } else if (props.type === 'edge' && props.title === 'time') {
