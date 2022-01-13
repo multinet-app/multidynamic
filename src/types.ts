@@ -53,6 +53,7 @@ export interface NestedVariables {
 export interface EdgeStyleVariables {
   width: string;
   color: string;
+  time: string;
 }
 
 export interface AttributeRange {
@@ -71,7 +72,15 @@ export interface AttributeRanges {
   [key: string]: AttributeRange;
 }
 
+export interface SlicedNetwork {
+  network: Network;
+  slice: number;
+  time: number[];
+}
+
 export interface State {
+  networkOnLoad: Network | null;
+  slicedNetwork: SlicedNetwork[];
   workspaceName: string | null;
   networkName: string | null;
   network: Network | null;

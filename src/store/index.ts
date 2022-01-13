@@ -6,7 +6,7 @@ import {
 } from 'd3-force';
 
 import {
-  Edge, Node, Network, SimulationEdge, State, EdgeStyleVariables, LoadError, NestedVariables, ProvenanceEventTypes, Dimensions, AttributeRange,
+  Edge, Node, Network, SimulationEdge, State, EdgeStyleVariables, LoadError, NestedVariables, ProvenanceEventTypes, Dimensions, AttributeRange, SlicedNetwork,
 } from '@/types';
 import api from '@/api';
 import { ColumnTypes, NetworkSpec, UserSpec } from 'multinet';
@@ -33,6 +33,7 @@ const {
     workspaceName: null,
     networkName: null,
     network: null,
+    networkOnLoad: null,
     columnTypes: null,
     selectedNodes: new Set(),
     loadError: {
@@ -52,6 +53,7 @@ const {
     edgeVariables: {
       width: '',
       color: '',
+      time: '',
     },
     nodeSizeVariable: '',
     nodeColorVariable: '',
@@ -81,6 +83,7 @@ const {
       x: null,
       y: null,
     },
+    slicedNetwork: [],
   } as State,
 
   getters: {
@@ -135,6 +138,10 @@ const {
 
     setNetwork(state, network: Network) {
       state.network = network;
+    },
+
+    setNetworkOnLoad(state, network: Network) {
+      state.networkOnLoad = network;
     },
 
     setColumnTypes(state, columnTypes: ColumnTypes) {
@@ -284,6 +291,10 @@ const {
 
     addAttributeRange(state, attributeRange: AttributeRange) {
       state.attributeRanges = { ...state.attributeRanges, [attributeRange.attr]: attributeRange };
+    },
+
+    setSlicedNetwork(state, slicedNetwork: SlicedNetwork[]) {
+      state.slicedNetwork = slicedNetwork;
     },
 
     setProvenance(state, provenance: Provenance<State, ProvenanceEventTypes, unknown>) {
@@ -497,6 +508,8 @@ const {
         edges: edges.results as Edge[],
       };
       commit.setNetwork(networkElements);
+      // Store origingal copy of network
+      commit.setNetworkOnLoad(networkElements);
 
       const networkTables = await api.networkTables(workspaceName, networkName);
       // Get the network metadata promises

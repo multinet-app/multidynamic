@@ -1,5 +1,7 @@
 <script lang="ts">
 import Legend from '@/components/Legend.vue';
+import TimeSlicing from '@/components/TimeSlicing.vue';
+import EdgeBuilder from '@/components/EdgeBuilder.vue';
 import AboutDialog from '@/components/AboutDialog.vue';
 import LoginMenu from '@/components/LoginMenu.vue';
 
@@ -12,8 +14,10 @@ import {
 export default defineComponent({
   components: {
     Legend,
+    TimeSlicing,
     AboutDialog,
     LoginMenu,
+    EdgeBuilder,
   },
 
   setup() {
@@ -482,7 +486,8 @@ export default defineComponent({
             />
           </v-list-item>
         </div>
-
+        <TimeSlicing />
+        <EdgeBuilder />
         <v-subheader class="grey darken-3 py-0 white--text">
           Legend
 

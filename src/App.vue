@@ -9,6 +9,7 @@ import Alert from '@/components/Alert.vue';
 import Controls from '@/components/Controls.vue';
 import MultiLink from '@/components/MultiLink.vue';
 import ProvVis from '@/components/ProvVis.vue';
+import TimeLine from '@/components/TimeLine.vue';
 
 export default {
   name: 'App',
@@ -18,12 +19,14 @@ export default {
     Controls,
     MultiLink,
     ProvVis,
+    TimeLine,
   },
 
   setup() {
     const network = computed(() => store.state.network);
     const selectedNodes = computed(() => store.state.selectedNodes);
     const loadError = computed(() => store.state.loadError);
+    const slicedNetwork = computed(() => store.state.slicedNetwork.length > 1);
 
     const multilinkContainer: Ref<Element | null> = ref(null);
     const multilinkContainerDimensions = computed(() => {
@@ -56,6 +59,7 @@ export default {
       multilinkContainer,
       multilinkContainerDimensions,
       showProvenanceVis,
+      slicedNetwork,
     };
   },
 };
@@ -65,6 +69,9 @@ export default {
   <v-app>
     <v-main>
       <controls />
+      <time-line
+        v-if="network !== null && slicedNetwork"
+      />
 
       <multi-link
         v-if="network !== null && selectedNodes !== null"
