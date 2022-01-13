@@ -72,8 +72,8 @@ export default defineComponent({
 
     const selectedRange = ref([0, 0]);
 
-    watch([timeMax], () => {
-      if (timeMax.value > 0) { selectedRange.value = [timeMin.value, timeMax.value]; }
+    watch([timeMin, timeMax], () => {
+      if (timeMax.value > 0 || timeMin.value > 0) { selectedRange.value = [timeMin.value, timeMax.value]; }
     });
 
     function sliceNetwork() {

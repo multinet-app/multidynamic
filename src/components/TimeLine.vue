@@ -87,7 +87,7 @@ export default defineComponent({
           v-for="(slice, key, index) of currentTime.timeRanges"
           :id="`timeSlice_${key}`"
           :key="`timeSlice_${key}`"
-          :class="`timelineRectClass`"
+          class="timelineRectClass"
           :width="svgDimensions.width / timeRangesLength"
           :height="20"
           :y="0"
