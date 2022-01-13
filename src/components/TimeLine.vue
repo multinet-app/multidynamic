@@ -2,7 +2,7 @@
 import { select, selectAll } from 'd3-selection';
 import store from '@/store';
 import {
-  computed, defineComponent, ref, Ref, watch,
+  computed, defineComponent, ref,
 } from '@vue/composition-api';
 
 export default defineComponent({
@@ -56,11 +56,6 @@ export default defineComponent({
       store.commit.setNetwork(slicedNetwork.value[selection].network);
     }
 
-    watch([slicedNetwork], () => {
-      selectAll('.timelineRectClass').classed('selected', false);
-      select('#timeSlice_0').classed('selected', true);
-    });
-
     return {
       svgDimensions,
       currentTime,
@@ -92,7 +87,7 @@ export default defineComponent({
           v-for="(slice, key, index) of currentTime.timeRanges"
           :id="`timeSlice_${key}`"
           :key="`timeSlice_${key}`"
-          :class="currentTime.current === index ? 'timelineRectClass selected' : 'timelineRectClass'"
+          :class="`timelineRectClass`"
           :width="svgDimensions.width / timeRangesLength"
           :height="20"
           :y="0"
