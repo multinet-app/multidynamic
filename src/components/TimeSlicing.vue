@@ -112,19 +112,49 @@ export default defineComponent({
       }
     }
 
-    function exportNetwork() {
+    function exportEdges() {
       if (network.value === null) {
         return;
       }
+      // Slice network in case 'Generate Slices' button
+      // not clicked or updated
+      sliceNetwork();
+      const { slicedNetwork } = store.state;
 
-      const networkToExport = sliceNetwork();
+      // Generate edge table data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const edges: any[] = [];
+      slicedNetwork.forEach((slice) => {
+        const timeObj = { slice: slice.slice, timeStart: slice.time[0], timeFinish: slice.time[1] };
+        slice.network.edges.forEach((edge) => {
+          const rowObj = Object.assign(edge, timeObj);
+          edges.push(rowObj);
+        });
+      });
+
+      // Formate edge data for CSV
+      const separator = ',';
+      const keys = Object.keys(edges[0]);
+      const edgeTable = `${keys.join(separator)
+      }\n${
+        edges.map((edge) => keys.map((k) => {
+          let cell = edge[k] === null || edge[k] === undefined ? '' : edge[k];
+          cell = cell instanceof Date
+            ? cell.toLocaleString()
+            : cell.toString().replace(/"/g, '""');
+          if (cell.search(/("|,|\n)/g) >= 0) {
+            cell = `"${cell}"`;
+          }
+          return cell;
+        }).join(separator)).join('\n')}`;
+
       const a = document.createElement('a');
       a.href = URL.createObjectURL(
-        new Blob([JSON.stringify(networkToExport)], {
-          type: 'text/json',
+        new Blob([edgeTable], {
+          type: 'text/csv',
         }),
       );
-      a.download = `${store.state.networkName}_${timeSliceNumber.value}-slices.json`;
+      a.download = `${store.state.networkName}_${timeSliceNumber.value}-slices.csv`;
       a.click();
     }
 
@@ -137,7 +167,7 @@ export default defineComponent({
       timeSliceNumber,
       cleanedEdgeVariables,
       sliceNetwork,
-      exportNetwork,
+      exportEdges,
       timeRange,
       timeMin,
       timeMax,
@@ -240,9 +270,9 @@ export default defineComponent({
                 color="primary"
                 block
                 depressed
-                @click="exportNetwork"
+                @click="exportEdges"
               >
-                Export Network
+                Export Edge Table
               </v-btn>
             </v-col>
           </v-row>
