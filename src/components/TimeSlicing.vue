@@ -176,6 +176,9 @@ export default defineComponent({
         class="pb-4 pt-2"
       >
         <v-list-item>
+          <v-icon color="blue">
+            mdi-numeric-1-circle
+          </v-icon>
           <v-select
             v-model="startTimeVar"
             label="Start Time"
@@ -188,6 +191,9 @@ export default defineComponent({
           />
         </v-list-item>
         <v-list-item>
+          <v-icon color="blue">
+            mdi-numeric-2-circle
+          </v-icon>
           <v-select
             v-model="endTimeVar"
             label="End Time"
@@ -200,17 +206,30 @@ export default defineComponent({
           />
         </v-list-item>
         <v-list-item>
-          <v-range-slider
-            v-model="selectedRange"
-            dense
-            hide-details
-            :min="timeMin"
-            :max="timeMax"
-            thumb-label
-          />
+          <v-icon color="blue">
+            mdi-numeric-3-circle
+          </v-icon>
+          <v-col>
+            <v-text-field
+              v-model="selectedRange[0]"
+              label="Min"
+              :min="timeMin"
+              outlined
+            />
+          </v-col>
+          <v-col>
+            <v-text-field
+              v-model="selectedRange[1]"
+              label="Max"
+              :min="timeMax"
+              outlined
+            />
+          </v-col>
         </v-list-item>
-
         <v-list-item>
+          <v-icon color="blue">
+            mdi-numeric-4-circle
+          </v-icon>
           <v-text-field
             v-model="timeSliceNumber"
             label="Time Slices"
