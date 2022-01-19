@@ -127,7 +127,7 @@ export default defineComponent({
       slicedNetwork.forEach((slice) => {
         const timeObj = { slice: slice.slice, timeStart: slice.time[0], timeFinish: slice.time[1] };
         slice.network.edges.forEach((edge) => {
-          const rowObj = Object.assign(edge, timeObj);
+          const rowObj = { ...edge, ...timeObj };
           edges.push(rowObj);
         });
       });
