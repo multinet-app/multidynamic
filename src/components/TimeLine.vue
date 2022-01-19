@@ -4,6 +4,7 @@ import store from '@/store';
 import {
   computed, defineComponent, ref,
 } from '@vue/composition-api';
+import { extent } from 'd3-array';
 
 export default defineComponent({
   name: 'TimeLine',
@@ -19,6 +20,8 @@ export default defineComponent({
       });
       return times;
     });
+    const timeExtent = computed(() => extent(Object.values(currentTime.value.timeRanges).flat()));
+    const textSpacer = ref(50);
 
     // Update height and width as the window size changes
     const svgDimensions = computed(() => store.state.svgDimensions);
@@ -65,6 +68,8 @@ export default defineComponent({
       tooltipStyle,
       toggleTooltip,
       tooltipMessage,
+      timeExtent,
+      textSpacer,
       updateTime,
     };
   },
@@ -83,19 +88,37 @@ export default defineComponent({
       <g
         id="timeline"
       >
+        <foreignObject
+          fill="black"
+          :x="textSpacer / 2"
+          y="0"
+          :width="textSpacer"
+          height="20"
+        >
+          {{ timeExtent[0] }}
+        </foreignObject>
         <rect
           v-for="(slice, key, index) of currentTime.timeRanges"
           :id="`timeSlice_${key}`"
           :key="`timeSlice_${key}`"
           class="timelineRectClass"
-          :width="svgDimensions.width / timeRangesLength"
-          :height="20"
-          :y="0"
-          :x="(svgDimensions.width / timeRangesLength) * index"
+          :width="(svgDimensions.width - (textSpacer * 2)) / timeRangesLength"
+          height="20"
+          y="0"
+          :x="textSpacer + (((svgDimensions.width - (textSpacer * 2)) / timeRangesLength) * index)"
           @mouseover="showTooltip(slice, key, $event)"
           @mouseout="hideTooltip"
           @click="updateTime(key)"
         />
+        <foreignObject
+          fill="black"
+          :x="svgDimensions.width - (textSpacer / 2)"
+          y="0"
+          :width="textSpacer"
+          height="20"
+        >
+          {{ timeExtent[1] }}
+        </foreignObject>
       </g>
     </svg>
 
