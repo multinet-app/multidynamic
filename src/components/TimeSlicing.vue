@@ -4,7 +4,7 @@ import {
   internalFieldNames, Edge, SlicedNetwork,
 } from '@/types';
 import {
-  computed, defineComponent, ref, watch,
+  computed, defineComponent, ref,
 } from '@vue/composition-api';
 
 export default defineComponent({
@@ -67,15 +67,6 @@ export default defineComponent({
       return range;
     });
 
-    const timeMin = computed(() => timeRange.value[0]);
-    const timeMax = computed(() => timeRange.value[1]);
-
-    const selectedRange = ref([0, 0]);
-
-    watch([timeMin, timeMax], () => {
-      if (timeMax.value > 0 || timeMin.value > 0) { selectedRange.value = [timeMin.value, timeMax.value]; }
-    });
-
     function sliceNetwork() {
       // Resets to original network view when time slice is 1
       if (originalNetwork.value !== null && timeSliceNumber.value === 1) {
@@ -85,27 +76,20 @@ export default defineComponent({
       // Generates sliced networks based on time slices
       if (originalNetwork.value !== null && timeSliceNumber.value !== 1) {
         const slicedNetwork: SlicedNetwork[] = [];
-        const timeInterval = (selectedRange.value[1] - selectedRange.value[0]) / timeSliceNumber.value;
-
-        // Generate time chunks
+        const timeInterval = (timeRange.value[1] - timeRange.value[0]) / timeSliceNumber.value;
+        // Generate sliced network
         // eslint-disable-next-line no-plusplus
         for (let i = 0; i < timeSliceNumber.value; i++) {
-          const currentSlice: SlicedNetwork = { slice: i, time: [0, 0], network: { nodes: [], edges: [] } };
-          currentSlice.time = [i * timeInterval, (i + 1) * timeInterval];
+          const currentSlice: SlicedNetwork = { slice: i, time: timeRange.value, network: { nodes: [], edges: [] } };
+          currentSlice.time = [(i * timeInterval) + timeRange.value[0], ((i + 1) * timeInterval) + timeRange.value[0]];
           currentSlice.network.nodes = originalNetwork.value.nodes;
+          originalNetwork.value.edges.forEach((edge: Edge) => {
+            if (edge[startTimeVar.value] >= currentSlice.time[0] && edge[startTimeVar.value] < currentSlice.time[1]) {
+              currentSlice.network.edges.push(edge);
+            }
+          });
           slicedNetwork.push(currentSlice);
         }
-
-        // Generate sliced network
-        let i = 0;
-        originalNetwork.value.edges.forEach((edge: Edge) => {
-          if (edge[startTimeVar.value] >= slicedNetwork[i].time[0] && edge[startTimeVar.value] < slicedNetwork[i].time[1]) {
-            slicedNetwork[i].network.edges.push(edge);
-          } else if (i < timeSliceNumber.value) {
-            i += 1;
-            slicedNetwork[i].network.edges.push(edge);
-          }
-        });
 
         store.commit.setSlicedNetwork(slicedNetwork);
         store.commit.setNetwork(slicedNetwork[0].network);
@@ -139,9 +123,6 @@ export default defineComponent({
       sliceNetwork,
       exportNetwork,
       timeRange,
-      timeMin,
-      timeMax,
-      selectedRange,
     };
   },
 });
@@ -211,17 +192,17 @@ export default defineComponent({
           </v-icon>
           <v-col>
             <v-text-field
-              v-model="selectedRange[0]"
+              v-model.number="timeRange[0]"
+              type="number"
               label="Min"
-              :min="timeMin"
               outlined
             />
           </v-col>
           <v-col>
             <v-text-field
-              v-model="selectedRange[1]"
+              v-model.number="timeRange[1]"
+              type="number"
               label="Max"
-              :min="timeMax"
               outlined
             />
           </v-col>
