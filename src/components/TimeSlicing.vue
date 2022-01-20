@@ -52,17 +52,36 @@ export default defineComponent({
 
     // Compute the min and max times
     const timeRange = computed(() => {
-      const range: number[] = [0, 0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const range: any[] = [0, 0];
+      let isDate = false;
       if (startTimeVar.value !== null && endTimeVar.value !== null && originalNetwork.value !== null) {
         // Loop through all edges, return min and max time values
-        originalNetwork.value.edges.forEach((edge: Edge) => {
-          if (edge[startTimeVar.value] < range[0]) {
-            range[0] = edge[startTimeVar.value];
+        originalNetwork.value.edges.forEach((edge: Edge, i: number) => {
+          // Check for dates
+          let startTime: number | Date = edge[startTimeVar.value];
+          let endTime: number | Date = edge[endTimeVar.value];
+          if (Date.parse(edge[startTimeVar.value])) {
+            startTime = Date.parse(edge[startTimeVar.value]);
+            endTime = Date.parse(edge[endTimeVar.value]);
+            isDate = true;
           }
-          if (edge[endTimeVar.value] > range[1]) {
-            range[1] = edge[endTimeVar.value];
+          if (i === 0) {
+            range[0] = startTime;
+            range[1] = endTime;
+          }
+          if (startTime < range[0]) {
+            range[0] = startTime;
+          }
+          if (endTime > range[1]) {
+            range[1] = endTime;
           }
         });
+      }
+      // Update so dates are displayed as dates
+      if (isDate) {
+        range[0] = new Date(range[0]).toLocaleDateString();
+        range[1] = new Date(range[1]).toLocaleDateString();
       }
       return range;
     });
@@ -222,16 +241,14 @@ export default defineComponent({
           </v-icon>
           <v-col>
             <v-text-field
-              v-model.number="timeRange[0]"
-              type="number"
+              v-model="timeRange[0]"
               label="Min"
               outlined
             />
           </v-col>
           <v-col>
             <v-text-field
-              v-model.number="timeRange[1]"
-              type="number"
+              v-model="timeRange[1]"
               label="Max"
               outlined
             />
