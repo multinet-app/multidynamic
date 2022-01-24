@@ -105,8 +105,10 @@ export default defineComponent({
     });
 
     watch([dateFormatted], () => {
-      timeRange.value[0] = new Date(dateFormatted.value[0]);
-      timeRange.value[1] = new Date(dateFormatted.value[1]);
+      if (isDate.value) {
+        timeRange.value[0] = new Date(dateFormatted.value[0]);
+        timeRange.value[1] = new Date(dateFormatted.value[1]);
+      }
     });
 
     function sliceNetwork() {
