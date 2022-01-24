@@ -43,14 +43,14 @@ export default defineComponent({
       if (isDate.value) {
         tooltipMessage.value = `Slice: ${key}
       Time: ${new Date(slice[0]).toLocaleString(undefined, {
-    year: '2-digit',
+    year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
     minute: 'numeric',
     timeZoneName: 'short',
   })} - ${new Date(slice[1]).toLocaleString(undefined, {
-  year: '2-digit',
+  year: 'numeric',
   month: 'short',
   day: 'numeric',
   hour: 'numeric',
