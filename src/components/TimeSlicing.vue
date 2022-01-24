@@ -4,7 +4,7 @@ import {
   internalFieldNames, Edge, SlicedNetwork,
 } from '@/types';
 import {
-  computed, defineComponent, ref,
+  computed, defineComponent, Ref, ref, watch,
 } from '@vue/composition-api';
 import { scaleLinear, scaleTime } from 'd3-scale';
 
@@ -14,6 +14,8 @@ export default defineComponent({
   setup() {
     const showOptions = ref(false);
     const sliceRules = (value: string) => !Number.isNaN(parseFloat(value)) || 'Please type a number';
+    const calMenu = ref([false, false]);
+    const dateFormatted: Ref<string[]> = ref([]);
 
     const network = computed(() => store.state.network);
     const originalNetwork = computed(() => store.state.networkOnLoad);
@@ -30,6 +32,16 @@ export default defineComponent({
         return store.commit.setIsDate(value);
       },
     });
+
+    function formatDate(date: Date) {
+      const dateString = date.toLocaleString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+      const [month, day, year] = dateString.split('/');
+      return `${year}-${month}-${day}`;
+    }
 
     function cleanVariableList(list: Set<string>): Set<string> {
       const cleanedVariables = new Set<string>();
@@ -85,12 +97,16 @@ export default defineComponent({
           }
         });
       }
-      // Update so dates are displayed as dates
-      if (isDate.value) {
-        range[0] = new Date(range[0]).toLocaleDateString();
-        range[1] = new Date(range[1]).toLocaleDateString();
+      // Format date
+      if (isDate) {
+        dateFormatted.value = [formatDate(new Date(range[0])), formatDate(new Date(range[1]))];
       }
       return range;
+    });
+
+    watch([dateFormatted], () => {
+      timeRange.value[0] = new Date(dateFormatted.value[0]);
+      timeRange.value[1] = new Date(dateFormatted.value[1]);
     });
 
     function sliceNetwork() {
@@ -198,6 +214,8 @@ export default defineComponent({
       exportEdges,
       timeRange,
       isDate,
+      calMenu,
+      dateFormatted,
     };
   },
 });
@@ -267,7 +285,63 @@ export default defineComponent({
             label="Date format"
           />
         </v-list-item>
-        <v-list-item>
+        <!-- Date Picker -->
+        <v-list-item v-if="isDate">
+          <v-menu
+            :ref="calMenu[0]"
+            v-model="calMenu[0]"
+            :close-on-content-click="false"
+            transition="scale-transition"
+            offset-y
+            max-width="290px"
+            min-width="auto"
+          >
+            <template #activator="{ on, attrs }">
+              <v-text-field
+                v-model="dateFormatted[0]"
+                label="Start Date"
+                hint="YYYY-MM-DD"
+                persistent-hint
+                prepend-icon="mdi-calendar"
+                v-bind="attrs"
+                v-on="on"
+              />
+            </template>
+            <v-date-picker
+              v-model="dateFormatted[0]"
+              no-title
+              @input="calMenu[0] = false"
+            />
+          </v-menu>
+          <v-menu
+            :ref="calMenu[1]"
+            v-model="calMenu[1]"
+            :close-on-content-click="false"
+            transition="scale-transition"
+            offset-y
+            max-width="290px"
+            min-width="auto"
+          >
+            <template #activator="{ on, attrs }">
+              <v-text-field
+                v-model="dateFormatted[1]"
+                label="End Date"
+                hint="YYYY-MM-DD"
+                persistent-hint
+                prepend-icon="mdi-calendar"
+                v-bind="attrs"
+                v-on="on"
+              />
+            </template>
+            <v-date-picker
+              v-model="dateFormatted[1]"
+              no-title
+              @input="calMenu[1] = false"
+            />
+          </v-menu>
+        </v-list-item>
+        <!-- Numeric Picker -->
+        <v-list-item v-if="!isDate">
           <v-icon color="blue">
             mdi-numeric-3-circle
           </v-icon>
