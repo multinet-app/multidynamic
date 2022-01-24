@@ -95,17 +95,18 @@ export default defineComponent({
       // Generates sliced networks based on time slices
       if (originalNetwork.value !== null && timeSliceNumber.value !== 1) {
         const slicedNetwork: SlicedNetwork[] = [];
-        let slicedRange: number[] | Date[] = [];
+        const slicedRange = [];
         if (isDate.value) {
           slicedRange[0] = new Date(timeRange.value[0]).getTime();
           slicedRange[1] = new Date(timeRange.value[1]).getTime();
         } else {
-          slicedRange = timeRange.value;
+          slicedRange[0] = parseFloat(timeRange.value[0]);
+          slicedRange[1] = parseFloat(timeRange.value[1]);
         }
         // Generate sliced network
         // eslint-disable-next-line no-plusplus
         for (let i = 0; i < timeSliceNumber.value; i++) {
-          const currentSlice: SlicedNetwork = { slice: i + 1, time: slicedRange, network: { nodes: [], edges: [] } };
+          const currentSlice: SlicedNetwork = { slice: i + 1, time: [], network: { nodes: [], edges: [] } };
           if (isDate.value) {
             const timeIntervals = scaleTime().domain(slicedRange).range([0, timeSliceNumber.value]);
             currentSlice.time = [timeIntervals.invert(i), timeIntervals.invert(i + 1)];
@@ -117,10 +118,10 @@ export default defineComponent({
             });
           } else {
             const timeIntervals = scaleLinear().domain(slicedRange).range([0, timeSliceNumber.value]);
-            currentSlice.time = [timeIntervals(i), timeIntervals(i + 1)];
+            currentSlice.time = [timeIntervals.invert(i), timeIntervals.invert(i + 1)];
             currentSlice.network.nodes = originalNetwork.value.nodes;
             originalNetwork.value.edges.forEach((edge: Edge) => {
-              if (timeIntervals(edge[startTimeVar.value]) >= i && timeIntervals(edge[startTimeVar.value]) < i + 1) {
+              if (timeIntervals(parseFloat(edge[startTimeVar.value])) >= i && timeIntervals(parseFloat(edge[startTimeVar.value])) < i + 1) {
                 currentSlice.network.edges.push(edge);
               }
             });
