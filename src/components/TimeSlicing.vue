@@ -6,7 +6,7 @@ import {
 import {
   computed, defineComponent, ref,
 } from '@vue/composition-api';
-import { scaleTime } from 'd3-scale';
+import { scaleLinear, scaleTime } from 'd3-scale';
 
 export default defineComponent({
   name: 'TimeSlicing',
@@ -22,7 +22,7 @@ export default defineComponent({
     const startTimeVar = ref('');
     const endTimeVar = ref('');
     const timeSliceNumber = ref(1);
-    let isDate = false;
+    const isDate = ref(false);
 
     function cleanVariableList(list: Set<string>): Set<string> {
       const cleanedVariables = new Set<string>();
@@ -62,10 +62,9 @@ export default defineComponent({
           // Check for dates
           let startTime: number | Date = edge[startTimeVar.value];
           let endTime: number | Date = edge[endTimeVar.value];
-          if (Date.parse(edge[startTimeVar.value])) {
+          if (isDate.value) {
             startTime = Date.parse(edge[startTimeVar.value]);
             endTime = Date.parse(edge[endTimeVar.value]);
-            isDate = true;
           }
           if (i === 0) {
             range[0] = startTime;
@@ -80,7 +79,7 @@ export default defineComponent({
         });
       }
       // Update so dates are displayed as dates
-      if (isDate) {
+      if (isDate.value) {
         range[0] = new Date(range[0]).toLocaleDateString();
         range[1] = new Date(range[1]).toLocaleDateString();
       }
@@ -97,7 +96,7 @@ export default defineComponent({
       if (originalNetwork.value !== null && timeSliceNumber.value !== 1) {
         const slicedNetwork: SlicedNetwork[] = [];
         let slicedRange: number[] | Date[] = [];
-        if (isDate) {
+        if (isDate.value) {
           slicedRange[0] = new Date(timeRange.value[0]).getTime();
           slicedRange[1] = new Date(timeRange.value[1]).getTime();
         } else {
@@ -107,7 +106,7 @@ export default defineComponent({
         // eslint-disable-next-line no-plusplus
         for (let i = 0; i < timeSliceNumber.value; i++) {
           const currentSlice: SlicedNetwork = { slice: i + 1, time: slicedRange, network: { nodes: [], edges: [] } };
-          if (isDate) {
+          if (isDate.value) {
             const timeIntervals = scaleTime().domain(slicedRange).range([0, timeSliceNumber.value]);
             currentSlice.time = [timeIntervals.invert(i), timeIntervals.invert(i + 1)];
             currentSlice.network.nodes = originalNetwork.value.nodes;
@@ -117,11 +116,11 @@ export default defineComponent({
               }
             });
           } else {
-            const timeInterval = (slicedRange[1] - slicedRange[0]) / timeSliceNumber.value;
-            currentSlice.time = [(i * timeInterval) + timeRange.value[0], ((i + 1) * timeInterval) + timeRange.value[0]];
+            const timeIntervals = scaleLinear().domain(slicedRange).range([0, timeSliceNumber.value]);
+            currentSlice.time = [timeIntervals(i), timeIntervals(i + 1)];
             currentSlice.network.nodes = originalNetwork.value.nodes;
             originalNetwork.value.edges.forEach((edge: Edge) => {
-              if (edge[startTimeVar.value] >= currentSlice.time[0] && edge[startTimeVar.value] < currentSlice.time[1]) {
+              if (timeIntervals(edge[startTimeVar.value]) >= i && timeIntervals(edge[startTimeVar.value]) < i + 1) {
                 currentSlice.network.edges.push(edge);
               }
             });
@@ -190,6 +189,7 @@ export default defineComponent({
       sliceNetwork,
       exportEdges,
       timeRange,
+      isDate,
     };
   },
 });
@@ -251,6 +251,12 @@ export default defineComponent({
             clearable
             outlined
             dense
+          />
+        </v-list-item>
+        <v-list-item>
+          <v-checkbox
+            v-model="isDate"
+            label="Date format"
           />
         </v-list-item>
         <v-list-item>
