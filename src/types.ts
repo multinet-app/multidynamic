@@ -117,6 +117,7 @@ export interface State {
   edgeLength: number;
   svgDimensions: Dimensions;
   layoutVars: { x: string | null; y: string | null };
+  isDate: boolean;
 }
 
 export type ProvenanceEventTypes =
