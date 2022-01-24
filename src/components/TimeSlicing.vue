@@ -22,7 +22,14 @@ export default defineComponent({
     const startTimeVar = ref('');
     const endTimeVar = ref('');
     const timeSliceNumber = ref(1);
-    const isDate = ref(false);
+    const isDate = computed({
+      get() {
+        return store.state.isDate;
+      },
+      set(value: boolean) {
+        return store.commit.setIsDate(value);
+      },
+    });
 
     function cleanVariableList(list: Set<string>): Set<string> {
       const cleanedVariables = new Set<string>();

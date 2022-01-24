@@ -11,6 +11,7 @@ export default defineComponent({
 
   setup() {
     const slicedNetwork = computed(() => store.state.slicedNetwork);
+    const isDate = computed(() => store.state.isDate);
 
     const currentTime = computed(() => {
       const times: { timeRanges: {[key: number]: number[]} ; current: number ; slices: number } = { timeRanges: {}, current: 0, slices: 0 };
@@ -39,10 +40,29 @@ export default defineComponent({
         x: event.clientX - controlsWidth.value,
         y: event.clientY + 20,
       };
-
-      tooltipMessage.value = `Slice: ${key}
+      if (isDate.value) {
+        tooltipMessage.value = `Slice: ${key}
+      Time: ${new Date(slice[0]).toLocaleString(undefined, {
+    year: '2-digit',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    timeZoneName: 'short',
+  })} - ${new Date(slice[1]).toLocaleString(undefined, {
+  year: '2-digit',
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  timeZoneName: 'short',
+})}`;
+        toggleTooltip.value = true;
+      } else {
+        tooltipMessage.value = `Slice: ${key}
       Time: ${Math.floor(slice[0])} - ${Math.floor(slice[1])}`;
-      toggleTooltip.value = true;
+        toggleTooltip.value = true;
+      }
     }
 
     function hideTooltip() {
@@ -71,6 +91,7 @@ export default defineComponent({
       timeExtent,
       textSpacer,
       updateTime,
+      isDate,
     };
   },
 });
@@ -90,12 +111,16 @@ export default defineComponent({
       >
         <foreignObject
           fill="black"
-          :x="textSpacer / 2"
+          :x="isDate ? 0 : textSpacer / 2"
           y="0"
           :width="textSpacer"
           height="20"
         >
-          {{ timeExtent[0] }}
+          {{ isDate ? timeExtent[0].toLocaleString(undefined, {
+            "year": "2-digit",
+            "month": "2-digit",
+            "day": "numeric"
+          }) : timeExtent[0] }}
         </foreignObject>
         <rect
           v-for="(slice, key, index) of currentTime.timeRanges"
@@ -112,12 +137,16 @@ export default defineComponent({
         />
         <foreignObject
           fill="black"
-          :x="svgDimensions.width - (textSpacer / 2)"
+          :x="isDate ? svgDimensions.width - (textSpacer) : svgDimensions.width - (textSpacer / 2)"
           y="0"
           :width="textSpacer"
           height="20"
         >
-          {{ timeExtent[1] }}
+          {{ isDate ? timeExtent[1].toLocaleString(undefined, {
+            "year": "2-digit",
+            "month": "2-digit",
+            "day": "numeric"
+          }) : timeExtent[1] }}
         </foreignObject>
       </g>
     </svg>
