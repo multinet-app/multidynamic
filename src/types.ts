@@ -75,7 +75,7 @@ export interface AttributeRanges {
 export interface SlicedNetwork {
   network: Network;
   slice: number;
-  time: number[];
+  time: number[] | Date[];
 }
 
 export interface State {

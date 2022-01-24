@@ -6,6 +6,7 @@ import {
 import {
   computed, defineComponent, ref,
 } from '@vue/composition-api';
+import { scaleTime } from 'd3-scale';
 
 export default defineComponent({
   name: 'TimeSlicing',
@@ -21,6 +22,7 @@ export default defineComponent({
     const startTimeVar = ref('');
     const endTimeVar = ref('');
     const timeSliceNumber = ref(1);
+    let isDate = false;
 
     function cleanVariableList(list: Set<string>): Set<string> {
       const cleanedVariables = new Set<string>();
@@ -53,8 +55,7 @@ export default defineComponent({
     // Compute the min and max times
     const timeRange = computed(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const range: any[] = [0, 0];
-      let isDate = false;
+      const range: Date[] | number[] | string[] = [];
       if (startTimeVar.value !== null && endTimeVar.value !== null && originalNetwork.value !== null) {
         // Loop through all edges, return min and max time values
         originalNetwork.value.edges.forEach((edge: Edge, i: number) => {
@@ -95,21 +96,38 @@ export default defineComponent({
       // Generates sliced networks based on time slices
       if (originalNetwork.value !== null && timeSliceNumber.value !== 1) {
         const slicedNetwork: SlicedNetwork[] = [];
-        const timeInterval = (timeRange.value[1] - timeRange.value[0]) / timeSliceNumber.value;
+        let slicedRange: number[] | Date[] = [];
+        if (isDate) {
+          slicedRange[0] = new Date(timeRange.value[0]).getTime();
+          slicedRange[1] = new Date(timeRange.value[1]).getTime();
+        } else {
+          slicedRange = timeRange.value;
+        }
         // Generate sliced network
         // eslint-disable-next-line no-plusplus
         for (let i = 0; i < timeSliceNumber.value; i++) {
-          const currentSlice: SlicedNetwork = { slice: i, time: timeRange.value, network: { nodes: [], edges: [] } };
-          currentSlice.time = [(i * timeInterval) + timeRange.value[0], ((i + 1) * timeInterval) + timeRange.value[0]];
-          currentSlice.network.nodes = originalNetwork.value.nodes;
-          originalNetwork.value.edges.forEach((edge: Edge) => {
-            if (edge[startTimeVar.value] >= currentSlice.time[0] && edge[startTimeVar.value] < currentSlice.time[1]) {
-              currentSlice.network.edges.push(edge);
-            }
-          });
+          const currentSlice: SlicedNetwork = { slice: i + 1, time: slicedRange, network: { nodes: [], edges: [] } };
+          if (isDate) {
+            const timeIntervals = scaleTime().domain(slicedRange).range([0, timeSliceNumber.value]);
+            currentSlice.time = [timeIntervals.invert(i), timeIntervals.invert(i + 1)];
+            currentSlice.network.nodes = originalNetwork.value.nodes;
+            originalNetwork.value.edges.forEach((edge: Edge) => {
+              if (timeIntervals(new Date(edge[startTimeVar.value])) >= i && timeIntervals(new Date(edge[startTimeVar.value])) < i + 1) {
+                currentSlice.network.edges.push(edge);
+              }
+            });
+          } else {
+            const timeInterval = (slicedRange[1] - slicedRange[0]) / timeSliceNumber.value;
+            currentSlice.time = [(i * timeInterval) + timeRange.value[0], ((i + 1) * timeInterval) + timeRange.value[0]];
+            currentSlice.network.nodes = originalNetwork.value.nodes;
+            originalNetwork.value.edges.forEach((edge: Edge) => {
+              if (edge[startTimeVar.value] >= currentSlice.time[0] && edge[startTimeVar.value] < currentSlice.time[1]) {
+                currentSlice.network.edges.push(edge);
+              }
+            });
+          }
           slicedNetwork.push(currentSlice);
         }
-
         store.commit.setSlicedNetwork(slicedNetwork);
         store.commit.setNetwork(slicedNetwork[0].network);
       }
