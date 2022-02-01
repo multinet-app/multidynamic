@@ -84,6 +84,7 @@ const {
       y: null,
     },
     slicedNetwork: [],
+    isDate: false,
   } as State,
 
   getters: {
@@ -214,6 +215,10 @@ const {
       if (state.provenance !== null) {
         updateProvenanceState(state, 'Set Display Charts');
       }
+    },
+
+    setIsDate(state, isDate: boolean) {
+      state.isDate = isDate;
     },
 
     setMarkerSize(state, payload: { markerSize: number; updateProv: boolean }) {

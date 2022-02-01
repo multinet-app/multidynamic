@@ -75,7 +75,7 @@ export interface AttributeRanges {
 export interface SlicedNetwork {
   network: Network;
   slice: number;
-  time: number[];
+  time: number[] | Date[];
 }
 
 export interface State {
@@ -117,6 +117,7 @@ export interface State {
   edgeLength: number;
   svgDimensions: Dimensions;
   layoutVars: { x: string | null; y: string | null };
+  isDate: boolean;
 }
 
 export type ProvenanceEventTypes =

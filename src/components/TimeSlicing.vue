@@ -1,11 +1,13 @@
 <script lang="ts">
+import { formatShortDate } from '@/lib/utils';
 import store from '@/store';
 import {
   internalFieldNames, Edge, SlicedNetwork,
 } from '@/types';
 import {
-  computed, defineComponent, ref,
+  computed, defineComponent, Ref, ref, watch,
 } from '@vue/composition-api';
+import { scaleLinear, scaleTime } from 'd3-scale';
 
 export default defineComponent({
   name: 'TimeSlicing',
@@ -13,6 +15,8 @@ export default defineComponent({
   setup() {
     const showOptions = ref(false);
     const sliceRules = (value: string) => !Number.isNaN(parseFloat(value)) || 'Please type a number';
+    const calMenu = ref([false, false]);
+    const dateFormatted: Ref<string[]> = ref([]);
 
     const network = computed(() => store.state.network);
     const originalNetwork = computed(() => store.state.networkOnLoad);
@@ -21,6 +25,20 @@ export default defineComponent({
     const startTimeVar = ref('');
     const endTimeVar = ref('');
     const timeSliceNumber = ref(1);
+    const isDate = computed({
+      get() {
+        return store.state.isDate;
+      },
+      set(value: boolean) {
+        return store.commit.setIsDate(value);
+      },
+    });
+
+    function formatDate(date: Date) {
+      const dateString = formatShortDate(date);
+      const [month, day, year] = dateString.split('/');
+      return `${year}-${month}-${day}`;
+    }
 
     function cleanVariableList(list: Set<string>): Set<string> {
       const cleanedVariables = new Set<string>();
@@ -52,19 +70,41 @@ export default defineComponent({
 
     // Compute the min and max times
     const timeRange = computed(() => {
-      const range: number[] = [0, 0];
+      const range: Date[] | number[] | string[] = [];
       if (startTimeVar.value !== null && endTimeVar.value !== null && originalNetwork.value !== null) {
         // Loop through all edges, return min and max time values
-        originalNetwork.value.edges.forEach((edge: Edge) => {
-          if (edge[startTimeVar.value] < range[0]) {
-            range[0] = edge[startTimeVar.value];
+        originalNetwork.value.edges.forEach((edge: Edge, i: number) => {
+          // Check for dates
+          let startTime: number | Date = edge[startTimeVar.value];
+          let endTime: number | Date = edge[endTimeVar.value];
+          if (isDate.value) {
+            startTime = Date.parse(edge[startTimeVar.value]);
+            endTime = Date.parse(edge[endTimeVar.value]);
           }
-          if (edge[endTimeVar.value] > range[1]) {
-            range[1] = edge[endTimeVar.value];
+          if (i === 0) {
+            range[0] = startTime;
+            range[1] = endTime;
+          }
+          if (startTime < range[0]) {
+            range[0] = startTime;
+          }
+          if (endTime > range[1]) {
+            range[1] = endTime;
           }
         });
       }
+      // Format date
+      if (isDate) {
+        dateFormatted.value = [formatDate(new Date(range[0])), formatDate(new Date(range[1]))];
+      }
       return range;
+    });
+
+    watch([dateFormatted], () => {
+      if (isDate.value) {
+        timeRange.value[0] = new Date(dateFormatted.value[0]);
+        timeRange.value[1] = new Date(dateFormatted.value[1]);
+      }
     });
 
     function sliceNetwork() {
@@ -76,21 +116,39 @@ export default defineComponent({
       // Generates sliced networks based on time slices
       if (originalNetwork.value !== null && timeSliceNumber.value !== 1) {
         const slicedNetwork: SlicedNetwork[] = [];
-        const timeInterval = (timeRange.value[1] - timeRange.value[0]) / timeSliceNumber.value;
+        const slicedRange = [];
+        if (isDate.value) {
+          slicedRange[0] = new Date(timeRange.value[0]).getTime();
+          slicedRange[1] = new Date(timeRange.value[1]).getTime();
+        } else {
+          slicedRange[0] = parseFloat(timeRange.value[0].toString());
+          slicedRange[1] = parseFloat(timeRange.value[1].toString());
+        }
         // Generate sliced network
         // eslint-disable-next-line no-plusplus
         for (let i = 0; i < timeSliceNumber.value; i++) {
-          const currentSlice: SlicedNetwork = { slice: i, time: timeRange.value, network: { nodes: [], edges: [] } };
-          currentSlice.time = [(i * timeInterval) + timeRange.value[0], ((i + 1) * timeInterval) + timeRange.value[0]];
-          currentSlice.network.nodes = originalNetwork.value.nodes;
-          originalNetwork.value.edges.forEach((edge: Edge) => {
-            if (edge[startTimeVar.value] >= currentSlice.time[0] && edge[startTimeVar.value] < currentSlice.time[1]) {
-              currentSlice.network.edges.push(edge);
-            }
-          });
+          const currentSlice: SlicedNetwork = { slice: i + 1, time: [], network: { nodes: [], edges: [] } };
+          if (isDate.value) {
+            const timeIntervals = scaleTime().domain(slicedRange).range([0, timeSliceNumber.value]);
+            currentSlice.time = [timeIntervals.invert(i), timeIntervals.invert(i + 1)];
+            currentSlice.network.nodes = originalNetwork.value.nodes;
+            originalNetwork.value.edges.forEach((edge: Edge) => {
+              if (timeIntervals(new Date(edge[startTimeVar.value])) >= i && timeIntervals(new Date(edge[startTimeVar.value])) < i + 1) {
+                currentSlice.network.edges.push(edge);
+              }
+            });
+          } else {
+            const timeIntervals = scaleLinear().domain(slicedRange).range([0, timeSliceNumber.value]);
+            currentSlice.time = [timeIntervals.invert(i), timeIntervals.invert(i + 1)];
+            currentSlice.network.nodes = originalNetwork.value.nodes;
+            originalNetwork.value.edges.forEach((edge: Edge) => {
+              if (timeIntervals(parseFloat(edge[startTimeVar.value])) >= i && timeIntervals(parseFloat(edge[startTimeVar.value])) < i + 1) {
+                currentSlice.network.edges.push(edge);
+              }
+            });
+          }
           slicedNetwork.push(currentSlice);
         }
-
         store.commit.setSlicedNetwork(slicedNetwork);
         store.commit.setNetwork(slicedNetwork[0].network);
       }
@@ -153,6 +211,9 @@ export default defineComponent({
       sliceNetwork,
       exportEdges,
       timeRange,
+      isDate,
+      calMenu,
+      dateFormatted,
     };
   },
 });
@@ -217,21 +278,81 @@ export default defineComponent({
           />
         </v-list-item>
         <v-list-item>
+          <v-checkbox
+            v-model="isDate"
+            label="Date format"
+          />
+        </v-list-item>
+        <!-- Date Picker -->
+        <v-list-item v-if="isDate">
+          <v-menu
+            :ref="calMenu[0]"
+            v-model="calMenu[0]"
+            :close-on-content-click="false"
+            transition="scale-transition"
+            offset-y
+            max-width="290px"
+            min-width="auto"
+          >
+            <template #activator="{ on, attrs }">
+              <v-text-field
+                v-model="dateFormatted[0]"
+                label="Start Date"
+                hint="YYYY-MM-DD"
+                persistent-hint
+                prepend-icon="mdi-calendar"
+                v-bind="attrs"
+                v-on="on"
+              />
+            </template>
+            <v-date-picker
+              v-model="dateFormatted[0]"
+              no-title
+              @input="calMenu[0] = false"
+            />
+          </v-menu>
+          <v-menu
+            :ref="calMenu[1]"
+            v-model="calMenu[1]"
+            :close-on-content-click="false"
+            transition="scale-transition"
+            offset-y
+            max-width="290px"
+            min-width="auto"
+          >
+            <template #activator="{ on, attrs }">
+              <v-text-field
+                v-model="dateFormatted[1]"
+                label="End Date"
+                hint="YYYY-MM-DD"
+                persistent-hint
+                prepend-icon="mdi-calendar"
+                v-bind="attrs"
+                v-on="on"
+              />
+            </template>
+            <v-date-picker
+              v-model="dateFormatted[1]"
+              no-title
+              @input="calMenu[1] = false"
+            />
+          </v-menu>
+        </v-list-item>
+        <!-- Numeric Picker -->
+        <v-list-item v-else>
           <v-icon color="blue">
             mdi-numeric-3-circle
           </v-icon>
           <v-col>
             <v-text-field
-              v-model.number="timeRange[0]"
-              type="number"
+              v-model="timeRange[0]"
               label="Min"
               outlined
             />
           </v-col>
           <v-col>
             <v-text-field
-              v-model.number="timeRange[1]"
-              type="number"
+              v-model="timeRange[1]"
               label="Max"
               outlined
             />

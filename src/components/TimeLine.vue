@@ -5,15 +5,17 @@ import {
   computed, defineComponent, ref,
 } from '@vue/composition-api';
 import { extent } from 'd3-array';
+import { formatLongDate, formatShortDate } from '@/lib/utils';
 
 export default defineComponent({
   name: 'TimeLine',
 
   setup() {
     const slicedNetwork = computed(() => store.state.slicedNetwork);
+    const isDate = computed(() => store.state.isDate);
 
     const currentTime = computed(() => {
-      const times: { timeRanges: {[key: number]: number[]} ; current: number ; slices: number } = { timeRanges: {}, current: 0, slices: 0 };
+      const times: { timeRanges: {[key: number]: number[] | Date[]} ; current: number ; slices: number } = { timeRanges: {}, current: 0, slices: 0 };
       slicedNetwork.value.forEach((slice, i) => {
         times.timeRanges[i] = slice.time;
         times.slices = i + 1;
@@ -39,10 +41,15 @@ export default defineComponent({
         x: event.clientX - controlsWidth.value,
         y: event.clientY + 20,
       };
-
-      tooltipMessage.value = `Slice: ${key}
+      if (isDate.value) {
+        tooltipMessage.value = `Slice: ${key}
+      Time: ${formatLongDate(slice[0])} - ${formatLongDate(slice[1])}`;
+        toggleTooltip.value = true;
+      } else {
+        tooltipMessage.value = `Slice: ${key}
       Time: ${Math.floor(slice[0])} - ${Math.floor(slice[1])}`;
-      toggleTooltip.value = true;
+        toggleTooltip.value = true;
+      }
     }
 
     function hideTooltip() {
@@ -71,6 +78,8 @@ export default defineComponent({
       timeExtent,
       textSpacer,
       updateTime,
+      isDate,
+      formatShortDate,
     };
   },
 });
@@ -90,12 +99,12 @@ export default defineComponent({
       >
         <foreignObject
           fill="black"
-          :x="textSpacer / 2"
+          :x="isDate ? 0 : textSpacer / 2"
           y="0"
           :width="textSpacer"
           height="20"
         >
-          {{ timeExtent[0] }}
+          {{ isDate ? formatShortDate(timeExtent[0]) : timeExtent[0] }}
         </foreignObject>
         <rect
           v-for="(slice, key, index) of currentTime.timeRanges"
@@ -112,12 +121,12 @@ export default defineComponent({
         />
         <foreignObject
           fill="black"
-          :x="svgDimensions.width - (textSpacer / 2)"
+          :x="isDate ? svgDimensions.width - (textSpacer) : svgDimensions.width - (textSpacer / 2)"
           y="0"
           :width="textSpacer"
           height="20"
         >
-          {{ timeExtent[1] }}
+          {{ isDate ? formatShortDate(timeExtent[1]) : timeExtent[1] }}
         </foreignObject>
       </g>
     </svg>
