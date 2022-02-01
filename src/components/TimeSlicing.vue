@@ -1,4 +1,5 @@
 <script lang="ts">
+import { formatShortDate } from '@/lib/utils';
 import store from '@/store';
 import {
   internalFieldNames, Edge, SlicedNetwork,
@@ -34,11 +35,7 @@ export default defineComponent({
     });
 
     function formatDate(date: Date) {
-      const dateString = date.toLocaleString(undefined, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      });
+      const dateString = formatShortDate(date);
       const [month, day, year] = dateString.split('/');
       return `${year}-${month}-${day}`;
     }

@@ -5,6 +5,7 @@ import {
   computed, defineComponent, ref,
 } from '@vue/composition-api';
 import { extent } from 'd3-array';
+import { formatLongDate, formatShortDate } from '@/lib/utils';
 
 export default defineComponent({
   name: 'TimeLine',
@@ -42,21 +43,7 @@ export default defineComponent({
       };
       if (isDate.value) {
         tooltipMessage.value = `Slice: ${key}
-      Time: ${new Date(slice[0]).toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    timeZoneName: 'short',
-  })} - ${new Date(slice[1]).toLocaleString(undefined, {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: 'numeric',
-  timeZoneName: 'short',
-})}`;
+      Time: ${formatLongDate(slice[0])} - ${formatLongDate(slice[1])}`;
         toggleTooltip.value = true;
       } else {
         tooltipMessage.value = `Slice: ${key}
@@ -92,6 +79,7 @@ export default defineComponent({
       textSpacer,
       updateTime,
       isDate,
+      formatShortDate,
     };
   },
 });
@@ -116,11 +104,7 @@ export default defineComponent({
           :width="textSpacer"
           height="20"
         >
-          {{ isDate ? timeExtent[0].toLocaleString(undefined, {
-            "year": "2-digit",
-            "month": "2-digit",
-            "day": "numeric"
-          }) : timeExtent[0] }}
+          {{ isDate ? formatShortDate(timeExtent[0]) : timeExtent[0] }}
         </foreignObject>
         <rect
           v-for="(slice, key, index) of currentTime.timeRanges"
@@ -142,11 +126,7 @@ export default defineComponent({
           :width="textSpacer"
           height="20"
         >
-          {{ isDate ? timeExtent[1].toLocaleString(undefined, {
-            "year": "2-digit",
-            "month": "2-digit",
-            "day": "numeric"
-          }) : timeExtent[1] }}
+          {{ isDate ? formatShortDate(timeExtent[1]) : timeExtent[1] }}
         </foreignObject>
       </g>
     </svg>
