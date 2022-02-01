@@ -121,8 +121,8 @@ export default defineComponent({
           slicedRange[0] = new Date(timeRange.value[0]).getTime();
           slicedRange[1] = new Date(timeRange.value[1]).getTime();
         } else {
-          slicedRange[0] = parseFloat(timeRange.value[0]);
-          slicedRange[1] = parseFloat(timeRange.value[1]);
+          slicedRange[0] = parseFloat(timeRange.value[0].toString());
+          slicedRange[1] = parseFloat(timeRange.value[1].toString());
         }
         // Generate sliced network
         // eslint-disable-next-line no-plusplus

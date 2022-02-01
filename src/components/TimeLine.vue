@@ -15,7 +15,7 @@ export default defineComponent({
     const isDate = computed(() => store.state.isDate);
 
     const currentTime = computed(() => {
-      const times: { timeRanges: {[key: number]: number[]} ; current: number ; slices: number } = { timeRanges: {}, current: 0, slices: 0 };
+      const times: { timeRanges: {[key: number]: number[] | Date[]} ; current: number ; slices: number } = { timeRanges: {}, current: 0, slices: 0 };
       slicedNetwork.value.forEach((slice, i) => {
         times.timeRanges[i] = slice.time;
         times.slices = i + 1;
