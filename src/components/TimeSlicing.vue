@@ -70,7 +70,6 @@ export default defineComponent({
 
     // Compute the min and max times
     const timeRange = computed(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const range: Date[] | number[] | string[] = [];
       if (startTimeVar.value !== null && endTimeVar.value !== null && originalNetwork.value !== null) {
         // Loop through all edges, return min and max time values
@@ -340,7 +339,7 @@ export default defineComponent({
           </v-menu>
         </v-list-item>
         <!-- Numeric Picker -->
-        <v-list-item v-if="!isDate">
+        <v-list-item v-else>
           <v-icon color="blue">
             mdi-numeric-3-circle
           </v-icon>
